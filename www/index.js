@@ -1,3 +1,3 @@
-import * as wasm from "wasm-game-of-life";
+import * as wasm from "wasm-demo";
 
-wasm.greet();
+wasm.greet("hello world");

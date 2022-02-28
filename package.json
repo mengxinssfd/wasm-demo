@@ -1,0 +1,16 @@
+{
+  "name": "wasm-demo",
+  "collaborators": [
+    "Your Name <your.email@example.com>"
+  ],
+  "description": null,
+  "version": "0.1.0",
+  "license": null,
+  "repository": null,
+  "files": [
+    "wasm_demo_bg.wasm",
+    "wasm_demo.d.ts"
+  ],
+  "main": "wasm_demo.js",
+  "types": "wasm_demo.d.ts"
+}
