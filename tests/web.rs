@@ -17,7 +17,7 @@ fn pass() {
 
 #[cfg(test)]
 pub fn input_spaceship() -> Universe {
-    let mut universe = Universe::new();
+    let mut universe = Universe::new(64);
     universe.set_width(6);
     universe.set_height(6);
     universe.set_cells(&[(1, 2), (2, 3), (3, 1), (3, 2), (3, 3)]);
@@ -26,7 +26,7 @@ pub fn input_spaceship() -> Universe {
 
 #[cfg(test)]
 pub fn expect_spaceship() -> Universe {
-    let mut universe = Universe::new();
+    let mut universe = Universe::new(64);
     universe.set_width(6);
     universe.set_height(6);
     universe.set_cells(&[(2, 1), (2, 3), (3, 2), (3, 3), (4, 2)]);
