@@ -1,9 +1,11 @@
 mod utils;
 
 extern crate js_sys;
+extern crate web_sys;
 
-use wasm_bindgen::prelude::*;
 use std::fmt;
+use wasm_bindgen::prelude::*;
+
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -12,7 +14,7 @@ use std::fmt;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
-extern {
+extern "C" {
     fn alert(s: &str);
 }
 
@@ -36,6 +38,14 @@ pub struct Universe {
     cells: Vec<Cell>,
 }
 
+#[allow(unused)]
+macro_rules! log {
+    ( $( $t:tt )* ) => {
+        web_sys::console::log_1(&format!( $( $t )* ).into());
+    }
+}
+
+
 impl Universe {
     fn get_index(&self, row: u32, column: u32) -> usize {
         (row * self.width + column) as usize
@@ -55,8 +65,20 @@ impl Universe {
         }
         count
     }
+
+    pub fn get_cells(&self) -> &[Cell] {
+        &self.cells
+    }
+
+    pub fn set_cells(&mut self, cells: &[(u32, u32)]) {
+        for (row, col) in cells.iter().cloned() {
+            let idx = self.get_index(row, col);
+            self.cells[idx] = Cell::Alive;
+        }
+    }
 }
 
+// 带#[wasm_bindgen]的是暴露到wasm的
 #[wasm_bindgen]
 impl Universe {
     pub fn tick(&mut self) {
@@ -66,13 +88,15 @@ impl Universe {
                 let idx = self.get_index(row, col);
                 let cell = self.cells[idx];
                 let live_neighbors = self.live_neighbor_count(row, col);
+                log!("cell[{row}, {col}] is initially {cell:?} and has {live_neighbors} live neighbors");
                 let next_cell = match (cell, live_neighbors) {
                     (Cell::Alive, x) if x < 2 => Cell::Dead,
                     (Cell::Alive, 2) | (Cell::Alive, 3) => Cell::Alive,
                     (Cell::Alive, x) if x > 3 => Cell::Dead,
                     (Cell::Dead, 3) => Cell::Alive,
-                    (otherwise, _) => otherwise
+                    (otherwise, _) => otherwise,
                 };
+                log!("    it becomes {:?}", next_cell);
                 next[idx] = next_cell;
             }
         }
@@ -80,15 +104,18 @@ impl Universe {
     }
 
     pub fn new() -> Universe {
+        utils::set_panic_hook();
         let width = 64;
         let height = 64;
-        let cells = (0..width * height).map(|i| {
-            if js_sys::Math::random() < 0.5 {
-                Cell::Alive
-            } else {
-                Cell::Dead
-            }
-        }).collect();
+        let cells = (0..width * height)
+            .map(|i| {
+                if js_sys::Math::random() < 0.5 {
+                    Cell::Alive
+                } else {
+                    Cell::Dead
+                }
+            })
+            .collect();
 
         Universe {
             width,
@@ -106,8 +133,19 @@ impl Universe {
     pub fn height(&self) -> u32 {
         self.height
     }
+
     pub fn cells(&self) -> *const Cell {
         self.cells.as_ptr()
+    }
+
+    pub fn set_width(&mut self, width: u32) {
+        self.width = width;
+        self.cells = (0..width * self.height).map(|_i| Cell::Dead).collect();
+    }
+
+    pub fn set_height(&mut self, height: u32) {
+        self.height = height;
+        self.cells = (0..height * self.width).map(|_i| Cell::Dead).collect();
     }
 }
 
